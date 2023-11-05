@@ -1,0 +1,43 @@
+version: '3.8'
+
+name: pro-finansy
+services:
+    postgres:
+        container_name: pro-finansy-postgres
+        image: postgres:latest
+        environment:
+            POSTGRES_DB: "${POSTGRES_DB}"
+            POSTGRES_USER: "${POSTGRES_USER}"
+            POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+        ports:
+            - "5432:5432"
+
+    redis:
+        container_name: pro-finansy-redis
+        image: redis:latest
+        ports:
+            - "6379:6379"
+
+    auth:
+        container_name: pro-finansy-auth
+        build:
+            context: ./apps/auth
+            dockerfile: ./Dockerfile
+        command: ./start.sh
+        restart: on-failure
+        depends_on:
+            - postgres
+            - redis
+
+    backend:
+        container_name: pro-finansy-backend
+        build:
+            context: ./apps/backend
+            dockerfile: ./Dockerfile
+        ports:
+            - "${BACKEND_PORT}:3000"
+        command: yarn start
+        restart: on-failure
+        depends_on:
+            - postgres
+            - redis
